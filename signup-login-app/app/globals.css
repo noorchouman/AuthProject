@@ -1,0 +1,78 @@
+body {
+  background: #121212;
+  color: #fff;
+  min-height: 100vh;
+  font-family: 'Inter', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.center-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-card {
+  background: #1e1e1e;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px #000a;
+  min-width: 350px;
+  max-width: 90vw;
+  margin-top: 30px;
+  text-align: center;
+}
+
+.form-card h2 {
+  margin: 0 0 2rem 0;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+}
+
+.form-card input {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  background: #23272f;
+  color: #fff;
+  border: 1px solid #363636;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border 0.2s;
+}
+
+.form-card input:focus {
+  outline: none;
+  border-color: #f66;
+}
+
+.form-card button {
+  width: 100%;
+  padding: 0.8rem 0;
+  background: #e94f4f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+  margin-bottom: 0.7rem;
+}
+.form-card button:hover {
+  background: #f24c4c;
+}
+
+.form-card .switch-link {
+  color: #c7c7c7;
+  font-size: 1rem;
+}
+.form-card .switch-link a {
+  color: #e94f4f;
+  text-decoration: underline;
+  margin-left: 4px;
+}
