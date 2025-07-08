@@ -46,4 +46,15 @@ public class AuthController {
     public List<User> getAllUsers() {
         return userRepo.findAll();
     }
+    
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody User user) {
+        Optional<User> dbUser = userRepo.findByEmail(user.getEmail());
+        if (dbUser.isPresent() && passwordEncoder.matches(user.getPassword(), dbUser.get().getPassword())) {
+            // You should generate a JWT token or session here for real apps!
+            return ResponseEntity.ok("Login successful");
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials.");
+    }
+
 }

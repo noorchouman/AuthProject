@@ -23,10 +23,11 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/signup").permitAll()
-                .requestMatchers("/api/login").permitAll()
-                .anyRequest().authenticated()
-            )
+            	    .requestMatchers("/api/signup").permitAll()
+            	    .requestMatchers("/api/login").permitAll()
+            	    .requestMatchers("/h2-console/**").permitAll()   
+            	    .anyRequest().authenticated()
+            	)
             .formLogin(login -> login.disable())
             .logout(logout -> logout
                 .logoutUrl("/api/logout")
@@ -38,6 +39,7 @@ public class SecurityConfig {
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             );
+        http.headers(headers -> headers.frameOptions().disable());
 
         return http.build();
     }
