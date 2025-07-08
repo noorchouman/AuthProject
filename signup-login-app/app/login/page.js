@@ -14,17 +14,21 @@ export default function LoginPage() {
       const res = await fetch('http://localhost:8080/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // for cookies/sessions!
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
+
+      const text = await res.text();
 
       if (res.ok) {
         window.location.href = '/page1';
       } else {
         setError('Invalid credentials.');
+        console.log('LOGIN FAIL:', res.status, text);
       }
     } catch (err) {
       setError('Network error');
+      console.log('NETWORK ERROR:', err);
     }
   }
 
