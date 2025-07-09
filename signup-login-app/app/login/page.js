@@ -1,34 +1,39 @@
 'use client';
-import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const router = useRouter();
 
   async function handleLogin(e) {
     e.preventDefault();
     setError('');
+
     try {
       const res = await fetch('http://localhost:8080/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
 
-      const text = await res.text();
+      const data = await res.json();
 
-      if (res.ok) {
-        window.location.href = '/page1';
-      } else {
-        setError('Invalid credentials.');
-        console.log('LOGIN FAIL:', res.status, text);
+      if (!res.ok) {
+        throw new Error(data.message || 'Login failed');
       }
+
+      // Redirect to protected page after successful login
+      router.push('/page1');
+      router.refresh(); // Ensure the page updates with auth state
     } catch (err) {
-      setError('Network error');
-      console.log('NETWORK ERROR:', err);
+      setError(err.message || 'Login failed. Please try again.');
+      console.error('Login error:', err);
     }
   }
 
@@ -39,24 +44,19 @@ export default function LoginPage() {
         <input
           type="email"
           placeholder="Email"
-          autoComplete="email"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input
           type="password"
           placeholder="Password"
-          autoComplete="current-password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
-        {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
+        {error && <div style={{ color: 'red' }}>{error}</div>}
         <button type="submit">Log In</button>
-        <div className="switch-link">
-          No account? <Link href="/signup">Sign up here</Link>
-        </div>
       </form>
     </div>
   );
