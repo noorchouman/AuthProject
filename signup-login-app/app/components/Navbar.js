@@ -6,17 +6,8 @@ export default function Navbar() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    try {
-      await fetch('http://localhost:8080/api/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      document.cookie = 'isLoggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      router.push('/login');
-      router.refresh();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+    localStorage.removeItem('token');
+    router.push('/login');
   };
 
   return (

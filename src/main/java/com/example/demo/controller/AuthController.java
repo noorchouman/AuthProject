@@ -3,6 +3,9 @@ package com.example.demo.controller;
 import com.example.demo.model.User;
 import com.example.demo.repo.UserRepository;
 import com.example.demo.util.JwtUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,5 +57,16 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         return ResponseEntity.ok(Map.of("status", "Authenticated"));
+    }
+    @GetMapping("/check-auth")
+    public ResponseEntity<?> checkAuth(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (jwtUtil.validateToken(token)) {
+                return ResponseEntity.ok().build();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }
