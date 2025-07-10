@@ -2,71 +2,81 @@ package com.example.demo.controller;
 
 import com.example.demo.model.User;
 import com.example.demo.repo.UserRepository;
+import com.example.demo.service.OtpService;
 import com.example.demo.util.JwtUtil;
-
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/auth")
 public class AuthController {
-    private final UserRepository userRepo;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-
-    @Autowired
-    public AuthController(UserRepository userRepo, 
-                        PasswordEncoder passwordEncoder,
-                        JwtUtil jwtUtil) {
-        this.userRepo = userRepo;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-    }
+    @Autowired private UserRepository userRepo;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private JwtUtil jwtUtil;
+    @Autowired private OtpService otpService;
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody User user) {
         if (userRepo.findByEmail(user.getEmail()).isPresent()) {
-            return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", "Email already exists"));
+            return ResponseEntity.badRequest().body("Email already exists");
         }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        // Generate and store OTP
+        String otp = otpService.generateOtp();
+        user.setOtp(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
         userRepo.save(user);
-        return ResponseEntity.ok(Map.of("message", "Signup successful"));
+
+        // In production, send OTP via email/SMS
+        System.out.println("OTP for " + user.getEmail() + ": " + otp);
+
+        return ResponseEntity.ok("Signup successful. Check your email for OTP.");
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String otp = body.get("otp");
+        User user = userRepo.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (otpService.isOtpValid(user.getOtp(), otp, user.getOtpExpiry())) {
+            user.setVerified(true);
+            user.setOtp(null);
+            user.setOtpExpiry(null);
+            userRepo.save(user);
+            return ResponseEntity.ok("Account verified successfully");
+        }
+
+        return ResponseEntity.badRequest().body("Invalid or expired OTP");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
-        return userRepo.findByEmail(user.getEmail())
-            .filter(dbUser -> passwordEncoder.matches(user.getPassword(), dbUser.getPassword()))
+    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
+        String email = credentials.get("email");
+        String password = credentials.get("password");
+        
+        return userRepo.findByEmail(email)
+            .filter(dbUser -> passwordEncoder.matches(password, dbUser.getPassword()))
             .map(dbUser -> {
+                if (!dbUser.isVerified()) {
+                    return ResponseEntity.badRequest().body("Account not verified");
+                }
                 String token = jwtUtil.generateToken(dbUser.getEmail());
-                return ResponseEntity.ok(Map.of("token", token));
+                Map<String, String> response = new HashMap<>();
+                response.put("token", token);
+                return ResponseEntity.ok(response);
             })
-            .orElse(ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Invalid credentials")));
+            .orElse(ResponseEntity.badRequest().body("Invalid credentials"));
     }
-
-    @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser() {
-        return ResponseEntity.ok(Map.of("status", "Authenticated"));
-    }
-    @GetMapping("/check-auth")
-    public ResponseEntity<?> checkAuth(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            if (jwtUtil.validateToken(token)) {
-                return ResponseEntity.ok().build();
-            }
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
+    
+   
 }

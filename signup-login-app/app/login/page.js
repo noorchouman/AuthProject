@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -7,34 +7,39 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
+  
+  useEffect(() => {
+     setIsClient(true); // This will only run on client side
+   }, []);
 
-  async function handleLogin(e) {
-    e.preventDefault();
-    setError('');
+   async function handleLogin(e) {
+       e.preventDefault();
+       setError('');
+       try {
+         const res = await fetch('http://localhost:8080/auth/login', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ email, password }),
+         });
+         
+         if (!res.ok) {
+           const errorData = await res.json();
+           setError(errorData.message || errorData.error || 'Login failed');
+           return;
+         }
+         
+         const data = await res.json();
+         if (isClient) { // Only access localStorage on client
+           localStorage.setItem('token', data.token);
+         }
+         router.push('/page1');
+       } catch (err) {
+         setError('Network error. Please try again.');
+       }
+     }
 
-    try {
-      const res = await fetch('http://localhost:8080/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-
-      localStorage.setItem('token', data.token);
-      router.push('/page1');
-    } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
-      console.error('Login error:', err);
-    }
-  }
 
   return (
     <div className="auth-container">
@@ -43,7 +48,7 @@ export default function LoginPage() {
           <h2>Welcome Back</h2>
           <p className="auth-subtitle">Sign in to your account</p>
         </div>
-        
+        {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleLogin} className="auth-form">
           <div className="input-group">
             <label htmlFor="email">Email</label>
@@ -56,7 +61,6 @@ export default function LoginPage() {
               required
             />
           </div>
-          
           <div className="input-group">
             <label htmlFor="password">Password</label>
             <input
@@ -68,14 +72,10 @@ export default function LoginPage() {
               required
             />
           </div>
-
-          {error && <div className="auth-error">{error}</div>}
-
           <button type="submit" className="auth-button">
             Sign In
           </button>
         </form>
-
         <div className="auth-footer">
           New to our platform?{' '}
           <Link href="/signup" className="auth-link">Create an account</Link>
