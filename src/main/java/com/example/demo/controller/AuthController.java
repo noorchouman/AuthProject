@@ -68,15 +68,19 @@ public class AuthController {
             .filter(dbUser -> passwordEncoder.matches(password, dbUser.getPassword()))
             .map(dbUser -> {
                 if (!dbUser.isVerified()) {
-                    return ResponseEntity.badRequest().body("Account not verified");
+                    Map<String, String> response = new HashMap<>();
+                    response.put("error", "Account not verified");
+                    return ResponseEntity.badRequest().body(response);
                 }
                 String token = jwtUtil.generateToken(dbUser.getEmail());
                 Map<String, String> response = new HashMap<>();
                 response.put("token", token);
                 return ResponseEntity.ok(response);
             })
-            .orElse(ResponseEntity.badRequest().body("Invalid credentials"));
+            .orElseGet(() -> {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "Invalid credentials");
+                return ResponseEntity.badRequest().body(response);
+            });
     }
-    
-   
 }

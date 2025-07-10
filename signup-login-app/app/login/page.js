@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react'; 
+import { useState } from 'react'; 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -7,39 +7,33 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
-  
-  useEffect(() => {
-     setIsClient(true); // This will only run on client side
-   }, []);
 
-   async function handleLogin(e) {
-       e.preventDefault();
-       setError('');
-       try {
-         const res = await fetch('http://localhost:8080/auth/login', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ email, password }),
-         });
-         
-         if (!res.ok) {
-           const errorData = await res.json();
-           setError(errorData.message || errorData.error || 'Login failed');
-           return;
-         }
-         
-         const data = await res.json();
-         if (isClient) { // Only access localStorage on client
-           localStorage.setItem('token', data.token);
-         }
-         router.push('/page1');
-       } catch (err) {
-         setError('Network error. Please try again.');
-       }
-     }
-
+  async function handleLogin(e) {
+    e.preventDefault();
+    setError('');
+    try {
+      const res = await fetch('http://localhost:8080/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setError(data.error || data.message || 'Login failed');
+        return;
+      }
+      
+      // Store token and redirect
+      localStorage.setItem('token', data.token);
+      router.push('/page1');
+    } catch (err) {
+      setError('Network error. Please try again.');
+      console.error('Login error:', err);
+    }
+  }
 
   return (
     <div className="auth-container">

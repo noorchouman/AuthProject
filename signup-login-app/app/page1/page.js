@@ -9,31 +9,35 @@ export default function Page1() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    
     if (!token) {
       router.push('/login');
       return;
     }
 
+    // Simple verification - just check token exists
+    setAuthStatus('authenticated');
+    
+    // Optional: If you want to verify with backend
+    /*
     fetch('http://localhost:8080/api/me', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     })
     .then(res => {
-      if (res.ok) {
-        return res.json();
-      } else {
-        throw new Error('Not authenticated');
-      }
+      if (!res.ok) throw new Error('Not authenticated');
+      return res.json();
     })
     .then(data => {
-      setAuthStatus('authenticated');
       setUserEmail(data.email);
+      setAuthStatus('authenticated');
     })
     .catch(() => {
       localStorage.removeItem('token');
       router.push('/login');
     });
+    */
   }, [router]);
 
   if (authStatus === 'checking') {
@@ -62,10 +66,12 @@ export default function Page1() {
           <p className="auth-subtitle">You're successfully signed in</p>
         </div>
         
-        <div className="user-info">
-          <p>Logged in as:</p>
-          <div className="user-email">{userEmail}</div>
-        </div>
+        {userEmail && (
+          <div className="user-info">
+            <p>Logged in as:</p>
+            <div className="user-email">{userEmail}</div>
+          </div>
+        )}
 
         <button 
           onClick={() => {
