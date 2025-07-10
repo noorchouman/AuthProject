@@ -25,8 +25,6 @@ export default function LoginPage() {
         setError(data.error || data.message || 'Login failed');
         return;
       }
-      
-      // Store token and redirect
       localStorage.setItem('token', data.token);
       router.push('/page1');
     } catch (err) {

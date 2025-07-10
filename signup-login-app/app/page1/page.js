@@ -14,30 +14,8 @@ export default function Page1() {
       router.push('/login');
       return;
     }
-
-    // Simple verification - just check token exists
     setAuthStatus('authenticated');
-    
-    // Optional: If you want to verify with backend
-    /*
-    fetch('http://localhost:8080/api/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-    .then(res => {
-      if (!res.ok) throw new Error('Not authenticated');
-      return res.json();
-    })
-    .then(data => {
-      setUserEmail(data.email);
-      setAuthStatus('authenticated');
-    })
-    .catch(() => {
-      localStorage.removeItem('token');
-      router.push('/login');
-    });
-    */
+ 
   }, [router]);
 
   if (authStatus === 'checking') {
